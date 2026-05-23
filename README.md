@@ -2,6 +2,21 @@
 
 ## 一、项目简介
 基于PyTorch完成的一个101类别图像分类。使用`卷积神经网络（CNN）`，自行设计`train_mine.py`与`ResNet-18`对比结果。并实现单张图片预测`predict.py`。
+### 项目结构
+```
+Caltech-101/
+│
+├── saved_models/
+│   ├──best_mine_cnn.pth
+│   └──best_resnet18.pth
+│
+├── umbrella.jpg
+├── train_mine.py
+├── train_resnet.py
+├── predict.py
+├── utils.py
+└── README.md
+```
 
 ## 二、数据集
 * 来源:([Caltech-101](https://data.caltech.edu/records/mzrjq-6wc02?utm_source=chatgpt.com))
