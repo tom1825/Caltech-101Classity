@@ -19,9 +19,53 @@
 删除background类，使用`ImageFolder`读取图片，统一resize为128*128方便后续处理，并进行归一化。
 ### 2.模型
 #### 自建mineCNN:
-共5层卷积(64->128->256->512->512)，每个阶段均含有ResBlock，防止梯度消失。使用Global Average Pooling(GAP)替代直接全连接，减少计算量并降低过拟合概率。使用kaiming初始化卷积核。
+* 共5层卷积(64->128->256->512->512)
+```python
+stage(3,   64),    # 128 → 64
+stage(64,  128),   # 64 → 32
+stage(128, 256),   # 32  → 16
+stage(256, 512),   # 16  → 8
+stage(512, 512, pool=False),  # 8 → 8（保留空间信息）
+```
+* 每个stage的结构为:
+```python
+nn.Conv2d(in_ch, out_ch, 3, padding=1, bias=False),
+nn.BatchNorm2d(out_ch),
+nn.ReLU(inplace=True),
+ResBlock(out_ch),
+```
+* 每个阶段均含有ResBlock，防止梯度消失。
+```python
+nn.Conv2d(channels, channels, 3, padding=1, bias=False),
+nn.BatchNorm2d(channels),
+nn.ReLU(inplace=True),
+nn.Conv2d(channels, channels, 3, padding=1, bias=False),
+nn.BatchNorm2d(channels),
+```
+* 使用Global Average Pooling(GAP)替代直接全连接，减少计算量并降低过拟合概率。
+```python
+self.gap = nn.AdaptiveAvgPool2d(1)
+```
+* 使用kaiming初始化卷积核。
 #### ResNet18:
-首先加载ImageNet预训练权重。修改最后的全连接层，使模型输出101维的概率分布。stage1(10epoch)冻结主干，只训练全连接层。stage2(20epoch)全网络微调。
+* 加载ImageNet预训练权重。
+* 修改最后的全连接层，使模型输出101维(num_classes)的概率分布。
+```python
+nn.Linear(in_features, 256),
+nn.ReLU(inplace=True),
+nn.Dropout(0.4),
+nn.Linear(256, num_classes),
+```
+* stage1(10epoch)冻结主干，只训练全连接层。
+```python
+for param in model.parameters():
+    param.requires_grad = False
+```
+* stage2(20epoch)全网络微调。
+```python
+for param in model.parameters():
+    param.requires_grad = True
+```
 ### 3.训练策略
 * AdamW优化器(weight_decay=1e-4)
 * 线性Warmup(5epoch)+余弦退火学习率
