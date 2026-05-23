@@ -121,6 +121,4 @@ def predict(image_path):
 
 
 if __name__ == "__main__":
-    #predict("data/101_ObjectCategories/chair/image_0001.jpg")
-    #predict("feiji.png")
     predict("umbrella.jpg")
